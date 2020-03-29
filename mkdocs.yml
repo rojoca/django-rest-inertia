@@ -1,0 +1,4 @@
+site_name: django-rest-inertia
+site_description: A server-side adapter for Inertia https://inertiajs.com/
+repo_url: https://github.com/rojoca/django-rest-inertia
+site_dir: html
