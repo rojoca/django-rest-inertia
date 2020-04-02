@@ -7,31 +7,8 @@ from .config import TEMPLATE
 
 def inertia(component_path, template_name=None, **component_kwargs):
     """
-    Decorator to apply to class based views to convert the
+    Decorator to apply to rest_framework views and viewsets to convert the
     request into an interia request / response
-
-    On class based views:
-
-    @inertia("App/Dashboard)
-    class DashboardView(APIView):
-        def get(self, request, **kwargs):
-            # ...
-            return Response(data)
-
-    On viewsets:
-
-    @inertia("Users/List", retrieve="Users/Detail")
-    class UserViewSet(viewsets.ViewSet):
-        def list(self, request):
-            # ...
-            serializer = UserSerializer(queryset, many=True)
-            return Response(serializer.data)
-
-        def retrieve(self, request, pk=None):
-            # ...
-            serializer = UserSerializer(user)
-            return Response(serializer.data)
-
 
     Parameters:
     component_path (string): The component that should be passed back to the

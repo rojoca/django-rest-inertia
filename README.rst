@@ -71,6 +71,23 @@ Both these views would return the following:
       "version": "unversioned"
     }
 
+Note that if you make a request to the API without the ``X-Inertia``
+headers and using an ``Accept`` header that does not include html,
+then you will get a response as though there is no ``@inertia``
+decorator:
+
+.. code:: HTTP
+
+    GET: http://example.com/users
+    Accept: application/json
+
+    HTTP/1.1 200 OK
+    Content-Type: application/json
+
+    {
+      "users": []
+    }
+
 
 For ViewSets, each action may need a different component:
 
@@ -95,7 +112,6 @@ Or you can use the ``@component`` decorator:
         def retrieve(self, request, pk=None):
             //...
             return Response(data=user_data)
-
 
 Testing
 -------
