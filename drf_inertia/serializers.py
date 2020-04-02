@@ -86,12 +86,12 @@ class SessionSerializerField(SharedField):
 
     def to_representation(self, value):
         if not hasattr(self.context["request"], "session"):
-            return None
+            return {}
 
         if not self.is_conflict and self.session_field in self.context["request"].session:
             return self.context["request"].session[self.session_field]
 
-        return None
+        return {}
 
 
 class DefaultSharedSerializer(SharedSerializerBase):
