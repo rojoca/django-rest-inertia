@@ -1,12 +1,10 @@
-import logging
 from collections import OrderedDict
 from django.contrib import messages
-from django.conf import settings
 from django.utils.module_loading import import_string
 from rest_framework import serializers, fields
 from rest_framework.relations import PKOnlyObject
 
-logger = logging.getLogger('django')
+from .config import SHARED_DATA_SERIALIZER
 
 
 class SharedSerializerBase(serializers.Serializer):
@@ -17,13 +15,13 @@ class SharedSerializerBase(serializers.Serializer):
     You can define your own SharedSerializer by setting the
     INERTIA_SHARED_SERIALIZER_CLASS in your settings.
 
-    Each SharedSerializer receives an InertiaObject as the
+    Each SharedSerializer receives an Inertia as the
     instance to be "serialized" as well as the render_context
     as its context.
 
     The SharedSerializer serializes the Request by merging
-    its own fields with the data on the InertiaObject. Data from
-    the InertiaObject is never overwritten by the SharedSerializer.
+    its own fields with the data on the Inertia. Data from
+    the Inertia is never overwritten by the SharedSerializer.
     In this way you can override the default shared data in your
     own views if necessary.
 
@@ -62,33 +60,38 @@ class SharedField(fields.Field):
         kwargs['read_only'] = True
         super().__init__(**kwargs)
 
+    @property
+    def is_conflict(self):
+        return self.context["request"].status_code == status.HTTP_409_CONFLICT
+
     def get_attribute(self, instance):
         return instance
 
 
 class FlashSerializer(SharedField):
     def to_representation(self, value):
+        # no need to iterate (and mark used) messages if 409 response
         flash = {}
-        try:
+        if not self.is_conflict:
             storage = messages.get_messages(self.context["request"])
             for message in storage:
                 flash[message.level_tag] = message.message
-        except:
-            pass
         return flash
 
 
-class SessionErrorsSerializer(SharedField):
+class SessionSerializerField(SharedField):
+    def __init__(self, session_field, **kwargs):
+        self.session_field = session_field
+        super(SessionSerializerField, self).__init__(**kwargs)
+
     def to_representation(self, value):
-        try:
-            return self.context["request"].session["errors"] or {}
-        except:
-            pass
-        return {}
+        if not self.is_conflict and self.session_field in self.context["request"].session:
+            return self.context["request"].session[self.session_field]
+        return None
 
 
 class DefaultSharedSerializer(SharedSerializerBase):
-    errors = SessionErrorsSerializer(default=OrderedDict(), source='*')
+    errors = SessionSerializerField(session_field="errors", default=OrderedDict(), source='*')
     flash = FlashSerializer(default=OrderedDict(), source='*')
 
 
@@ -99,10 +102,6 @@ class InertiaSerializer(serializers.Serializer):
     url = serializers.URLField()
 
     def get_props(self, obj):
-        if hasattr(settings, 'INERTIA_SHARED_SERIALIZER_CLASS'):
-            serializer_class = import_string(settings.INERTIA_SHARED_SERIALIZER_CLASS)
-
-        else:
-            serializer_class = DefaultSharedSerializer
+        serializer_class = import_string(SHARED_DATA_SERIALIZER)
         serializer = serializer_class(self.context["request"], context=self.context)
         return serializer.data
