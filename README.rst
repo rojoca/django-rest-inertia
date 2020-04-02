@@ -39,23 +39,45 @@ passing it the frontend component:
     from drf_inertia.decorators import inertia
 
     # on a function based view:
-    @inertia("Users/List")
+    @inertia("User/List")
     @api_view(["GET"])
     def get_users(request,  **kwargs):
-        return Response(data={})
+        return Response(data={"users": []})
 
     # on a class based view:
-    @inertia("Users/List")
+    @inertia("User/List")
     class UsersView(views.APIView):
         def get(self, request, **kwargs):
-            return Response(data={})
+            return Response(data={"users": []})
+
+Both these views would return the following:
+
+.. code:: HTTP
+
+    GET: http://example.com/users
+    Accept: text/html, application/xhtml+xml
+    X-Inertia: true
+    X-Inertia-Version: unversioned
+
+    HTTP/1.1 200 OK
+    Content-Type: application/json
+
+    {
+      "component": "User/List",
+      "props": {
+        "users": []
+      },
+      "url": "/users",
+      "version": "unversioned"
+    }
+
 
 For ViewSets, each action may need a different component:
 
 .. code:: python
 
     # on a viewset:
-    @inertia("Users/List", retrieve="Users/Detail")
+    @inertia("User/List", retrieve="Users/Detail")
     class UserViewSet(viewsets.ModelViewSet):
         queryset = User.objects.all()
 
@@ -65,11 +87,11 @@ Or you can use the ``@component`` decorator:
 
     from drf_inertia.decorators import inertia, component
     
-    @inertia("Users/List")
+    @inertia("User/List")
     class UserViewSet(viewsets.ModelViewSet):
         queryset = User.objects.all()
 
-        @component("Users/Detail")
+        @component("User/Detail")
         def retrieve(self, request, pk=None):
             //...
             return Response(data=user_data)
