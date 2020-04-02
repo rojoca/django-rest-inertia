@@ -40,7 +40,7 @@ def inertia(component_path, template_name=None, **component_kwargs):
                              methods.
     template_name (string):  Optional. override the default template used when
                              returning HTML
-    **kwargs:                Any kwargs passed are used to map class based view
+    **component_kwargs:      Any kwargs passed are used to map class based view
                              methods or viewset view methods to components e.g.
                              retrieve="Users/Detail" would ensure that the component
                              returned for the retrive method would be "Users/Detail"
@@ -59,16 +59,13 @@ def inertia(component_path, template_name=None, **component_kwargs):
             request = wrapped_initialize_request(self, request, *args, **kwargs)
 
             if not hasattr(request, 'inertia'):
-                # get the action (~htp method) to determine the component
-                if hasattr(self, "action"):
-                    # viewsets set the "action" attribute on the instance
-                    action = self.action
-                else:
-                    # class based views just use the HTTP method
-                    action = request.method
+                # Get the action (~htp method) to determine the component.
+                # ViewSets set the "action" attribute on the instance,
+                # class based views just use the HTTP method
+                action = getattr(self, "action", request.method)
+                cp = component_kwargs.get(action, component_path)
 
-                # if a kwarg is set for the action use it, otherwise use default
-                request.inertia = Inertia.from_request(request, component_kwargs.get(action, component_path))
+                request.inertia = Inertia.from_request(request, cp)
                 self.inertia = request.inertia  # add to view as convenience
 
             # Asset Versioning:

@@ -6,13 +6,13 @@ django-rest-inertia
 Overview
 --------
 
-A server-side adapter for Inertia https://inertiajs.com/
+A django rest framework adapter for Inertia https://inertiajs.com/
 
 Requirements
 ------------
 
--  Python (2.7, 3.3, 3.4)
--  Django (1.6, 1.7, 1.8)
+-  Python (2.7, 3.3+)
+-  Django (1.11, 2.2, 3.0)
 -  Django REST Framework (2.4, 3.0, 3.1)
 
 Installation
@@ -27,7 +27,53 @@ Install using ``pip``\ …
 Example
 -------
 
-TODO: Write example.
+To use django-inertia-rest, decorate your views with the ``@inertia`` decorator
+passing it the frontend component:
+
+.. code:: python
+
+    from rest_framework import views, viewsets
+    from rest_framework.response import Response
+    from rest_framework.decorators import api_view
+
+    from drf_inertia.decorators import inertia
+
+    # on a function based view:
+    @inertia("Users/List")
+    @api_view(["GET"])
+    def get_users(request,  **kwargs):
+        return Response(data={})
+
+    # on a class based view:
+    @inertia("Users/List")
+    class UsersView(views.APIView):
+        def get(self, request, **kwargs):
+            return Response(data={})
+
+For ViewSets, each action may need a different component:
+
+.. code:: python
+
+    # on a viewset:
+    @inertia("Users/List", retrieve="Users/Detail")
+    class UserViewSet(viewsets.ModelViewSet):
+        queryset = User.objects.all()
+
+Or you can use the ``@component`` decorator:
+
+.. code:: python
+
+    from drf_inertia.decorators import inertia, component
+    
+    @inertia("Users/List")
+    class UserViewSet(viewsets.ModelViewSet):
+        queryset = User.objects.all()
+
+        @component("Users/Detail")
+        def retrieve(self, request, pk=None):
+            //...
+            return Response(data=user_data)
+
 
 Testing
 -------

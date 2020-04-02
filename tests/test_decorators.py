@@ -1,7 +1,7 @@
 import json
 from django.test import TestCase
 from django.db import models
-from rest_framework.decorators import api_view, action
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.test import APIRequestFactory
 from rest_framework.views import APIView
@@ -98,4 +98,3 @@ class DecoratorTestCase(TestCase):
         assert data["props"]["view"] == "list"
         assert response.status_code == 200
         assert response['Content-Type'] == "application/json"
-
