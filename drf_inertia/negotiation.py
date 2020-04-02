@@ -17,6 +17,11 @@ class Inertia(object):
     url = None
     data = {}
 
+    def __init__(self, **kwargs):
+        for k in kwargs:
+            if hasattr(self, k):
+                setattr(self, k, kwargs[k])
+
     def include(self, name):
         if not self.partial_data:
             return True
@@ -43,7 +48,7 @@ class Inertia(object):
 
         if inertia.is_data:
             # if this is an X-Inertia: true request, check the version
-            if inertia.version != VERSION:
+            if inertia.version is not None and inertia.version != VERSION:
                 raise Conflict()
 
             # set partial details if they exist and are valid

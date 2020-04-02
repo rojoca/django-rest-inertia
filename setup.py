@@ -7,7 +7,7 @@ from setuptools import setup
 
 
 name = 'django-rest-inertia'
-package = 'inertia'
+package = 'drf_inertia'
 description = 'A server-side adapter for Inertia https://inertiajs.com/'
 url = 'https://github.com/rojoca/django-rest-inertia'
 author = 'Rory Casey'

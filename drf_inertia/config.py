@@ -10,12 +10,12 @@ TEMPLATE = getattr(settings, 'INERTIA_HTML_TEMPLATE', 'index.html')
 # the django template var the inertia json should be set to
 TEMPLATE_VAR = getattr(settings, 'INERTIA_TEMPLATE_VAR', 'inertia_json')
 
-SHARED_DATA_SERIALIZER = getattr(settings. 'DEFAULT_SHARED_SERIALIZER')
+SHARED_DATA_SERIALIZER = getattr(settings, 'INERTIA_SHARED_SERIALIZER', 'drf_inertia.serializers.DefaultSharedSerializer')
 
 # The exception handler for inertia requests
 # ensures that exceptions are returned in interia
 # format
-EXCEPTION_HANDLER = getattr(settings, 'INERTIA_EXCEPTION_HANDLER', 'inertia.exceptions.DefaultExceptionHandler')
+EXCEPTION_HANDLER = getattr(settings, 'INERTIA_EXCEPTION_HANDLER', 'drf_inertia.exceptions.DefaultExceptionHandler')
 
 # The auth redirect is used in the default exception handler
 # to determine where to go when 401 or 403 errors are raised
