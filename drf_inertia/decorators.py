@@ -1,7 +1,6 @@
 from functools import wraps
-from rest_framework import response, views, viewsets, generics, exceptions
 
-from .negotiation import Inertia, InertiaNegotiation, InertiaHTMLRenderer, InertiaJSONRenderer
+from .negotiation import Inertia, InertiaNegotiation
 from .exceptions import exception_handler
 from .config import TEMPLATE
 
@@ -93,7 +92,7 @@ def inertia(component_path, template_name=None, **kwargs):
 
             def get_renderer_context(self):
                 context = super(WrappedInertiaView, self).get_renderer_context()
-                context["template_name"] = config.TEMPLATE
+                context["template_name"] = TEMPLATE
                 context["inertia"] = self.inertia
                 return context
 
@@ -117,7 +116,7 @@ def inertia(component_path, template_name=None, **kwargs):
 
                 # set the inertia template
                 # this can still be overriden by get_template_names()
-                self.template_name = template_name or config.TEMPLATE
+                self.template_name = template_name or TEMPLATE
 
                 return request
 

@@ -1,6 +1,4 @@
 import json
-from rest_framework import status
-from rest_framework.exceptions import ValidationError, APIException
 from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
 from rest_framework.negotiation import DefaultContentNegotiation
 
@@ -86,13 +84,11 @@ class InertiaJSONRenderer(InertiaRendererMixin, JSONRenderer):
 
 
 class InertiaNegotiation(DefaultContentNegotiation):
-    html_renderer = InertiaHTMLRenderer
-    json_renderer = InertiaJSONRenderer
 
     def select_renderer(self, request, renderers, format_suffix=None):
         # check for inertia headers:
         if hasattr(request, 'inertia') and request.inertia.is_data:
-            renderer = self.json_renderer()
+            renderer = InertiaJSONRenderer()
             media_type = "application/json"
         else:
             # select the default renderer (could be JSON)
@@ -103,6 +99,6 @@ class InertiaNegotiation(DefaultContentNegotiation):
             # once we have the renderer, check media_type and use the
             # inertia renderer if the media_type is html
             if "html" in media_type:
-                renderer = self.html_renderer()
+                renderer = InertiaHTMLRenderer()
 
         return (renderer, media_type)

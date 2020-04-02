@@ -24,7 +24,7 @@ class DefaultExceptionHandler(object):
 
         return AUTH_REDIRECT
 
-    def handle(exc, context):
+    def handle(self, exc, context):
         override_status = None
         override_headers = {}
 
@@ -35,14 +35,14 @@ class DefaultExceptionHandler(object):
             # add the errors to the users sessiong
             request.session["errors"] = exc.detail
 
-            #redirect back to the requested page
+            # redirect back to the requested page
             override_headers["Location"] = request.path
             override_status = status.HTTP_302_FOUND
 
         if is_inertia and (isinstance(exc, PermissionDenied) or isinstance(exc, NotAuthenticated)):
             # redirect to the AUTH_REDIRECT
             override_status = status.HTTP_302_FOUND
-            override_headers["Location"] = get_auth_redirect()
+            override_headers["Location"] = self.get_auth_redirect()
 
         # use rest framework exception handler to get the response
         response = views.exception_handler(exc, context)
@@ -61,4 +61,4 @@ class DefaultExceptionHandler(object):
 
 def exception_handler(exc, context):
     handler = import_string(EXCEPTION_HANDLER)
-    handler().handle(exc, content)
+    handler().handle(exc, context)

@@ -1,8 +1,7 @@
 from collections import OrderedDict
 from django.contrib import messages
 from django.utils.module_loading import import_string
-from rest_framework import serializers, fields
-from rest_framework.relations import PKOnlyObject
+from rest_framework import serializers, fields, status
 
 from .config import SHARED_DATA_SERIALIZER
 
