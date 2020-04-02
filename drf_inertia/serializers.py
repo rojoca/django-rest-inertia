@@ -37,7 +37,8 @@ class SharedSerializerBase(serializers.Serializer):
                 exclude.append(field)
 
         for field in exclude:
-            self.fields.pop(field)
+            if field in self.fields:
+                self.fields.pop(field)
 
         super(SharedSerializerBase, self).__init__(instance, *args, **kwargs)
 
@@ -61,7 +62,7 @@ class SharedField(fields.Field):
 
     @property
     def is_conflict(self):
-        return self.context["request"].status_code == status.HTTP_409_CONFLICT
+        return self.context["response"].status_code == status.HTTP_409_CONFLICT
 
     def get_attribute(self, instance):
         return instance
@@ -84,12 +85,21 @@ class SessionSerializerField(SharedField):
         super(SessionSerializerField, self).__init__(**kwargs)
 
     def to_representation(self, value):
+        if not hasattr(self.context["request"], "session"):
+            return None
+
         if not self.is_conflict and self.session_field in self.context["request"].session:
             return self.context["request"].session[self.session_field]
+
         return None
 
 
 class DefaultSharedSerializer(SharedSerializerBase):
+    errors = SessionSerializerField(session_field="errors", default=OrderedDict(), source='*')
+    flash = FlashSerializer(default=OrderedDict(), source='*')
+
+
+class SharedSerializer(SharedSerializerBase):
     errors = SessionSerializerField(session_field="errors", default=OrderedDict(), source='*')
     flash = FlashSerializer(default=OrderedDict(), source='*')
 

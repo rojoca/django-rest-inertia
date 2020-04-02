@@ -31,7 +31,7 @@ class Inertia(object):
 
     def check_version(self):
         # if this is an X-Inertia: true request, and the versions match
-        if self.is_data and self.version != VERSION:
+        if self.is_data and self.version is not None and self.version != VERSION:
             # this will trigger a refresh on the frontend
             # see https://inertiajs.com/the-protocol#asset-versioning
             raise Conflict()

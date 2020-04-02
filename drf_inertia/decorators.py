@@ -5,19 +5,10 @@ from .exceptions import exception_handler
 from .config import TEMPLATE
 
 
-def inertia(component_path, template_name=None, **kwargs):
+def inertia(component_path, template_name=None, **component_kwargs):
     """
-    Decorator to apply to @api_views or class based views to convert the
+    Decorator to apply to class based views to convert the
     request into an interia request / response
-
-    On function views (note the @api_view decorator is still required):
-
-    @inertia("App/Dashboard)
-    @api_view
-    def get_dashboard_data(self, request, **kwargs):
-        # ...
-        return Response(data)
-
 
     On class based views:
 
@@ -26,7 +17,6 @@ def inertia(component_path, template_name=None, **kwargs):
         def get(self, request, **kwargs):
             # ...
             return Response(data)
-
 
     On viewsets:
 
@@ -45,8 +35,8 @@ def inertia(component_path, template_name=None, **kwargs):
 
     Parameters:
     component_path (string): The component that should be passed back to the
-                             frontend for this view. For class based views or
-                             viewsets this is the default component for all
+                             frontend for this view. This is the default
+                             component for all
                              methods.
     template_name (string):  Optional. override the default template used when
                              returning HTML
@@ -55,25 +45,21 @@ def inertia(component_path, template_name=None, **kwargs):
                              retrieve="Users/Detail" would ensure that the component
                              returned for the retrive method would be "Users/Detail"
     """
-    def decorator(api_cls):
-        class WrappedInertiaView(api_cls):
-            content_negotiation_class = InertiaNegotiation
-            inertia = None
+    def decorator(target):
+        # if this is an api_view then there will be a cls property
+        # otherwise just need to decorate the target
+        cls = getattr(target, "cls", target)
 
-            def get_component_path(self, request):
-                """
-                This method is to support setting different components for
-                different methods in class based views or viewsets.
+        # need to keep the original initialize_request because we are
+        # not extending cls, we are replacing the methods, so calling
+        # super will not work as expected
+        wrapped_initialize_request = getattr(cls, "initialize_request")
 
-                e.g.
+        def initialize_request(self, request, *args, **kwargs):
+            request = wrapped_initialize_request(self, request, *args, **kwargs)
 
-                @inertia("Users/List", retrieve="Users/Detail")
-                class UserViewSet(viewsets.ViewSet):
-                    # ...
-
-                In this viewset, the retrieve method will use "Users/Detail" as
-                the component path, while all other methods will use "Users/List"
-                """
+            if not hasattr(request, 'inertia'):
+                # get the action (~htp method) to determine the component
                 if hasattr(self, "action"):
                     # viewsets set the "action" attribute on the instance
                     action = self.action
@@ -82,45 +68,27 @@ def inertia(component_path, template_name=None, **kwargs):
                     action = request.method
 
                 # if a kwarg is set for the action use it, otherwise use default
-                return kwargs.get(action, component_path)
+                request.inertia = Inertia.from_request(request, component_kwargs.get(action, component_path))
+                self.inertia = request.inertia  # add to view as convenience
 
-            @property
-            def default_response_headers(self):
-                headers = super(WrappedInertiaView, self).default_response_headers
-                headers["X-Inertia"] = True
-                return headers
+            # Asset Versioning:
+            #
+            # must do this after inertia has been added to the request
+            # otherwise the exception handler will not have access to
+            # the interia object (which will be on the request)
+            request.inertia.check_version()
 
-            def get_renderer_context(self):
-                context = super(WrappedInertiaView, self).get_renderer_context()
-                context["template_name"] = TEMPLATE
-                context["inertia"] = self.inertia
-                return context
+            # set the inertia template
+            # this can still be overriden by get_template_names()
+            self.template_name = template_name or TEMPLATE
 
-            def get_exception_handler(self):
-                return exception_handler
+            return request
 
-            def initialize_request(self, request, *args, **kwargs):
-                request = super(WrappedInertiaView, self).initialize_request(request, *args, **kwargs)
-
-                if not hasattr(request, 'inertia'):
-                    # dynamically add Inertia to the request
-                    request.inertia = Inertia.from_request(request, self.get_component_path(request))
-                    self.inertia = request.inertia  # add to view as convenience
-
-                # Asset Versioning:
-                #
-                # must do this after inertia has been added to the request
-                # otherwise the exception handler will not have access to
-                # the interia object (which will be on the request)
-                request.inertia.check_version()
-
-                # set the inertia template
-                # this can still be overriden by get_template_names()
-                self.template_name = template_name or TEMPLATE
-
-                return request
-
-        return WrappedInertiaView
+        # add the updated methods to the cls
+        cls.get_content_negotiator = lambda self: InertiaNegotiation()
+        cls.get_exception_handler = lambda self: exception_handler
+        cls.initialize_request = initialize_request
+        return target
     return decorator
 
 
