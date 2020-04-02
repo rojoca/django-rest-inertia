@@ -1,3 +1,4 @@
+import pytest
 from django.test import TestCase
 
 from rest_framework.request import Request
@@ -5,6 +6,7 @@ from rest_framework.test import APIRequestFactory
 from rest_framework.renderers import JSONRenderer, TemplateHTMLRenderer
 
 from drf_inertia.negotiation import Inertia, InertiaNegotiation, InertiaJSONRenderer, InertiaHTMLRenderer
+from drf_inertia.exceptions import Conflict
 
 factory = APIRequestFactory()
 
@@ -39,6 +41,18 @@ class TestInertia(TestCase):
         inertia = Inertia.from_request(request, component)
         assert inertia.is_data
         assert inertia.partial_data == ['prop1', 'prop2']
+
+    def test_from_request_raises_conflict(self):
+        request = Request(factory.get('/', HTTP_X_INERTIA=True, HTTP_X_INERTIA_VERSION="1.2.4"))
+        with pytest.raises(Conflict):
+            Inertia.from_request(request, "Component/Path")
+
+    def test_from_request_matching_version_does_not_raise_conflict(self):
+        request = Request(factory.get('/', HTTP_X_INERTIA=True, HTTP_X_INERTIA_VERSION="unversioned"))
+        try:
+            Inertia.from_request(request, "Component/Path")
+        except Conflict:
+            pytest.fail("Matching inertia version raises Conflict")
 
 
 class TestInertiaNegotiation(TestCase):

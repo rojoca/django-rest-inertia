@@ -6,6 +6,7 @@ djangorestframework>=2.4.3
 pytest-django>=3.9
 pytest>=5.0,<5.1
 pytest-cov==2.7.1
+pytest-mock==3.0.0
 flake8==2.2.2
 
 # wheel for PyPI installs
