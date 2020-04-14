@@ -14,6 +14,7 @@ class Inertia(object):
     partial_data = None
     url = None
     data = {}
+    _error_redirect = None
 
     def __init__(self, **kwargs):
         for k in kwargs:
@@ -35,6 +36,12 @@ class Inertia(object):
             # this will trigger a refresh on the frontend
             # see https://inertiajs.com/the-protocol#asset-versioning
             raise Conflict()
+
+    def set_error_redirect(self, path):
+        self._error_redirect = path
+
+    def get_error_redirect(self, request):
+        return self._error_redirect or self.url
 
     @classmethod
     def from_request(cls, request, component):

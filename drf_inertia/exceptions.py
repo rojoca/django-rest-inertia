@@ -36,7 +36,7 @@ class DefaultExceptionHandler(object):
             request.session["errors"] = exc.detail
 
             # redirect back to the requested page
-            override_headers["Location"] = request.path
+            override_headers["Location"] = request.inertia.get_error_redirect()
             override_status = status.HTTP_302_FOUND
 
         if is_inertia and (isinstance(exc, PermissionDenied) or isinstance(exc, NotAuthenticated)):
@@ -62,3 +62,17 @@ class DefaultExceptionHandler(object):
 def exception_handler(exc, context):
     handler = import_string(EXCEPTION_HANDLER)
     handler().handle(exc, context)
+
+
+def set_error_redirect(request, error_redirect):
+    """
+    Convenience method to set the Location redirected
+    to after an error. Should be used at the top of
+    views.
+
+    You could call set_error_redirect on the interia
+    object directly but you need to check that the
+    inertia object is actually there.
+    """
+    if hasattr(request, "inertia"):
+        request.inertia.set_error_redirect(error_redirect)

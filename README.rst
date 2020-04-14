@@ -24,8 +24,8 @@ Install using ``pip``\ …
 
     $ pip install django-rest-inertia
 
-Example
--------
+Views
+-----
 
 To use django-inertia-rest, decorate your views with the ``@inertia`` decorator
 passing it the frontend component:
@@ -112,6 +112,86 @@ Or you can use the ``@component`` decorator:
         def retrieve(self, request, pk=None):
             //...
             return Response(data=user_data)
+
+
+Shared data is added using a `SharedSerializer`. A default implementation
+`DefaultSharedSerializer` is provided which includes errors and flash data.
+
+The flash data makes use of Django's messages framework:
+
+.. code:: python
+
+    from django.contrib import messages
+
+    @inertia("User/List")
+    class UserList(APIView):
+        def get(self, request):
+            messages.add_message(request, messages.INFO, 'Got users.')
+            return Response(data=UserSerializer(User.objects.all(), many=True).data)
+
+    # GET /users
+    {
+      "component": "User/List",
+      "props": {
+        "users": [...],
+        "flash": {"info": "Got users."}
+      },
+      "url": "/users",
+      "version": "unversioned"
+    }
+
+
+Exceptions
+----------
+
+Inertia decorated views also have a custom exception handler set. This will catch
+exceptions, add errors to `request.session`, and return a `303` response as the
+inertia protocol demands.
+
+By default the redirect will be to the current `request.path` but you can override
+this in your view using `set_error_redirect`.
+
+Errors added to djangos "request.session" object will show up in the errors
+field in `GET` responses via the `DefaultSharedSerializer`.
+
+.. code:: python
+
+    from drf_inertia.exceptions import set_error_redirect 
+
+    @inertia("Users/List")
+    class UserViewSet(viewsets.ModelViewSet):
+        # ...
+
+        def create(self, request):
+            set_error_redirect(request, '/users/create)  # or reverse('users-create')
+            # this will invoke the inertia exception handler
+            # which adds the error to the session and redirects
+            # back to the request.path
+            raises ValidationError("Cannot create user")
+
+
+    # POST /users {"name": "John Smith", "email": "P@ssword"}
+    #
+    # 303 See Other
+    # Location: /users/create
+
+    # GET /users/create
+    {
+      "component": "User/Create",
+      "props": {
+        "users": [...],
+        "errors": ["Cannot create user"]
+      },
+      "url": "/users/create",
+      "version": "unversioned"
+    }
+
+
+    
+
+
+
+
 
 Testing
 -------

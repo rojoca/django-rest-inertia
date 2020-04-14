@@ -99,11 +99,6 @@ class DefaultSharedSerializer(SharedSerializerBase):
     flash = FlashSerializer(default=OrderedDict(), source='*')
 
 
-class SharedSerializer(SharedSerializerBase):
-    errors = SessionSerializerField(session_field="errors", default=OrderedDict(), source='*')
-    flash = FlashSerializer(default=OrderedDict(), source='*')
-
-
 class InertiaSerializer(serializers.Serializer):
     component = serializers.CharField()
     props = serializers.SerializerMethodField()
