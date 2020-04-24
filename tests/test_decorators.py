@@ -6,12 +6,20 @@ from rest_framework.response import Response
 from rest_framework.test import APIRequestFactory
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
+from rest_framework.exceptions import ValidationError
+from rest_framework import serializers
 
 from drf_inertia.decorators import inertia, component
+from drf_inertia.exceptions import set_error_redirect
 
 
 class Action(models.Model):
     pass
+
+
+class ErrorSerializer(serializers.Serializer):
+    good_field = serializers.CharField(max_length=1000)
+    bad_field = serializers.CharField(max_length=5)
 
 
 class DecoratorTestCase(TestCase):
@@ -98,3 +106,45 @@ class DecoratorTestCase(TestCase):
         assert data["props"]["view"] == "list"
         assert response.status_code == 200
         assert response['Content-Type'] == "application/json"
+
+    def test_decorated_api_view_handles_error(self):
+        @inertia("Component/Path")
+        class TestView(APIView):
+            def get(self, request, **kwargs):
+                raise ValidationError("This is an error")
+
+        request = self.factory.get('/', HTTP_X_INERTIA=True)
+        request.session = {}
+        response = TestView.as_view()(request)
+        assert response.status_code == 302
+        assert "errors" in request.session
+        assert response["Location"] == "/"
+
+    def test_decorated_api_view_handles_serializer_error(self):
+        @inertia("Component/Path")
+        class TestView(APIView):
+            def get(self, request, **kwargs):
+                s = ErrorSerializer(data={"good_field": "test", "bad_field": "really long"})
+                s.is_valid(raise_exception=True)
+
+        request = self.factory.get('/', HTTP_X_INERTIA=True)
+        request.session = {}
+        response = TestView.as_view()(request)
+        assert response.status_code == 302
+        assert "errors" in request.session
+        assert "bad_field" in request.session["errors"]
+        assert response["Location"] == "/"
+
+    def test_decorated_api_view_set_error_redirect(self):
+        @inertia("Component/Path")
+        class TestView(APIView):
+            def get(self, request, **kwargs):
+                set_error_redirect(request, "/error/redirect")
+                raise ValidationError("This is an error")
+
+        request = self.factory.get('/', HTTP_X_INERTIA=True)
+        request.session = {}
+        response = TestView.as_view()(request)
+        assert response.status_code == 302
+        assert "errors" in request.session
+        assert response["Location"] == "/error/redirect"

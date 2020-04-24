@@ -18,6 +18,12 @@ class Conflict(APIException):
 
 class DefaultExceptionHandler(object):
 
+    def get_redirect_status(self, request):
+        if request.method in ["put", "patch", "delete"]:
+            return status.HTTP_303_SEE_OTHER
+
+        return status.HTTP_302_FOUND
+
     def get_auth_redirect(self):
         if AUTH_REDIRECT_URL_NAME:
             return reverse(AUTH_REDIRECT_URL_NAME)
@@ -32,16 +38,13 @@ class DefaultExceptionHandler(object):
         is_inertia = hasattr(request, "inertia")
 
         if is_inertia and isinstance(exc, ValidationError):
-            # add the errors to the users sessiong
-            request.session["errors"] = exc.detail
-
-            # redirect back to the requested page
-            override_headers["Location"] = request.inertia.get_error_redirect()
-            override_status = status.HTTP_302_FOUND
+            # redirect user to the error redirect for this page (default is current page)
+            override_headers["Location"] = request.inertia.get_error_redirect(request)
+            override_status = self.get_redirect_status(status.HTTP_302_FOUND)
 
         if is_inertia and (isinstance(exc, PermissionDenied) or isinstance(exc, NotAuthenticated)):
             # redirect to the AUTH_REDIRECT
-            override_status = status.HTTP_302_FOUND
+            override_status = self.get_redirect_status(status.HTTP_302_FOUND)
             override_headers["Location"] = self.get_auth_redirect()
 
         # use rest framework exception handler to get the response
@@ -49,6 +52,9 @@ class DefaultExceptionHandler(object):
 
         if override_status:
             response.status_code = override_status
+            if response.data:
+                # add the errors to the users session
+                request.session["errors"] = response.data
 
         if is_inertia and response.status_code == status.HTTP_409_CONFLICT:
             response['X-Inertia-Location'] = request.path
@@ -61,7 +67,7 @@ class DefaultExceptionHandler(object):
 
 def exception_handler(exc, context):
     handler = import_string(EXCEPTION_HANDLER)
-    handler().handle(exc, context)
+    return handler().handle(exc, context)
 
 
 def set_error_redirect(request, error_redirect):
