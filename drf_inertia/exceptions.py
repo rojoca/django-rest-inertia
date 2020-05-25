@@ -40,11 +40,11 @@ class DefaultExceptionHandler(object):
         if is_inertia and isinstance(exc, ValidationError):
             # redirect user to the error redirect for this page (default is current page)
             override_headers["Location"] = request.inertia.get_error_redirect(request)
-            override_status = self.get_redirect_status(status.HTTP_302_FOUND)
+            override_status = self.get_redirect_status(request)
 
         if is_inertia and (isinstance(exc, PermissionDenied) or isinstance(exc, NotAuthenticated)):
             # redirect to the AUTH_REDIRECT
-            override_status = self.get_redirect_status(status.HTTP_302_FOUND)
+            override_status = self.get_redirect_status(request)
             override_headers["Location"] = self.get_auth_redirect()
 
         # use rest framework exception handler to get the response
