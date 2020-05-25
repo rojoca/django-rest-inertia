@@ -24,6 +24,54 @@ Install using ``pip``\ …
 
     $ pip install django-rest-inertia
 
+Django Settings
+---------------
+
+The following settings can be used:
+
+    # the version to use for ASSET VERSIONING
+    INERTIA_VERSION # default: "unversioned"
+
+    # the HTML template for interia requests (can be overridden by the @intertia decorator)
+    INERTIA_HTML_TEMPLATE # default: 'index.html'
+
+    # the django template var the inertia json should be set to
+    INERTIA_TEMPLATE_VAR # default: 'inertia_json'
+
+    # A serializer that is passed the request as its "instance". The serialized values are
+    # added to the props of every inertia response (except where 'only' is specified)
+    INERTIA_SHARED_SERIALIZER # default: 'drf_inertia.serializers.DefaultSharedSerializer'
+
+    # The exception handler for inertia requests
+    # ensures that exceptions are returned in interia
+    # format
+    INERTIA_EXCEPTION_HANDLER # default: 'drf_inertia.exceptions.DefaultExceptionHandler'
+
+    # The auth redirect is used in the default exception handler
+    # to determine where to go when 401 or 403 errors are raised
+    INERTIA_AUTH_REDIRECT # default: '/login'
+
+    # if AUTH_REDIRECT_URL_NAME is specified use django.urls.reverse
+    # to get the AUTH_REDIRECT instead
+    INERTIA_AUTH_REDIRECT_URL_NAME # default: None
+
+Non-inertia settings:
+
+    # To use inertia as it is with Laravel and Rails you should be using
+    # Session Authentication
+    REST_FRAMEWORK = {
+        "DEFAULT_AUTHENTICATION_CLASSES": (
+            "rest_framework.authentication.SessionAuthentication",
+        )
+    }
+    
+    # The default CSRF header name passed by axios
+    CSRF_HEADER_NAME = "HTTP_X_XSRF_TOKEN"
+
+    # The default CSRF cookie name that axios looks up
+    CSRF_COOKIE_NAME = "XSRF-TOKEN"
+
+
 Views
 -----
 
