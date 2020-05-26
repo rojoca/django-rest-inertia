@@ -26,4 +26,4 @@ AUTH_REDIRECT = getattr(settings, 'INERTIA_AUTH_REDIRECT', '/login')
 AUTH_REDIRECT_URL_NAME = getattr(settings, 'INERTIA_AUTH_REDIRECT_URL_NAME', None)
 
 # DEBUG
-DEBUG = config.DEBUG
+DEBUG = settings.DEBUG
