@@ -2,7 +2,7 @@ from functools import wraps
 
 from .negotiation import Inertia, InertiaNegotiation
 from .exceptions import exception_handler
-from .config import TEMPLATE
+from .config import TEMPLATE, DEBUG
 
 
 def inertia(component_path, template_name=None, **component_kwargs):
@@ -57,6 +57,14 @@ def inertia(component_path, template_name=None, **component_kwargs):
             self.template_name = template_name or TEMPLATE
 
             return request
+
+        def raise_uncaught_exception(self, exc):
+            if DEBUG:
+                request = self.request
+                request.accepted_renderer = 'html'
+                request.accepted_media_type = "text/html"
+            raise exc
+
 
         # add the updated methods to the cls
         cls.get_content_negotiator = lambda self: InertiaNegotiation()

@@ -24,3 +24,6 @@ AUTH_REDIRECT = getattr(settings, 'INERTIA_AUTH_REDIRECT', '/login')
 # if AUTH_REDIRECT_URL_NAME is specified use django.urls.reverse
 # to get the AUTH_REDIRECT instead
 AUTH_REDIRECT_URL_NAME = getattr(settings, 'INERTIA_AUTH_REDIRECT_URL_NAME', None)
+
+# DEBUG
+DEBUG = config.DEBUG

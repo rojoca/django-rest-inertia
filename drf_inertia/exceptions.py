@@ -48,7 +48,13 @@ class DefaultExceptionHandler(object):
             override_headers["Location"] = self.get_auth_redirect()
 
         # use rest framework exception handler to get the response
+        # this will only catch APIException, 404, or PermissionDenied
         response = views.exception_handler(exc, context)
+
+        if not response:
+            # If here there is an unintended exception (e.g. syntax error) and
+            # django should handle it.
+            return
 
         if override_status:
             response.status_code = override_status
