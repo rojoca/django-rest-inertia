@@ -89,7 +89,7 @@ class SessionSerializerField(SharedField):
             return {}
 
         if not self.is_conflict and self.session_field in self.context["request"].session:
-            return self.context["request"].session[self.session_field]
+            return self.context["request"].session.pop(self.session_field, None)
 
         return {}
 
