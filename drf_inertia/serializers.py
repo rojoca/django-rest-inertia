@@ -95,7 +95,7 @@ class SessionSerializerField(SharedField):
 
 
 class DefaultSharedSerializer(SharedSerializerBase):
-    errors = SessionSerializerField(session_field="errors", default=OrderedDict(), source='*')
+    errors = SessionSerializerField("errors", default=OrderedDict(), source='*')
     flash = FlashSerializer(default=OrderedDict(), source='*')
 
 

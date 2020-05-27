@@ -1,10 +1,18 @@
 import json
+from rest_framework import status
 from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
 from rest_framework.negotiation import DefaultContentNegotiation
 
 from .config import VERSION, TEMPLATE_VAR
 from .serializers import InertiaSerializer
 from .exceptions import Conflict
+
+
+REDIRECTS = [
+    status.HTTP_301_MOVED_PERMANENTLY,
+    status.HTTP_302_FOUND,
+    status.HTTP_303_SEE_OTHER,
+]
 
 
 class Inertia(object):
@@ -67,11 +75,13 @@ class Inertia(object):
 
 class InertiaRendererMixin(object):
     def render(self, data, accepted_media_type=None, renderer_context=None):
-        # add the data to the inertia object then serialize it
-        # with the InertiaSerializer
-        renderer_context["request"].inertia.data = data
-        serializer = InertiaSerializer(renderer_context["request"].inertia, context=renderer_context)
-        data = serializer.data
+        # only add data to response if not a redirect
+        if renderer_context["response"] and renderer_context["response"].status_code not in REDIRECTS:
+            # add the data to the inertia object then serialize it
+            # with the InertiaSerializer
+            renderer_context["request"].inertia.data = data
+            serializer = InertiaSerializer(renderer_context["request"].inertia, context=renderer_context)
+            data = serializer.data
 
         return super(InertiaRendererMixin, self).render(
             data, accepted_media_type=accepted_media_type, renderer_context=renderer_context)
