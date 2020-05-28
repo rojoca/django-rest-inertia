@@ -19,7 +19,7 @@ class Conflict(APIException):
 class DefaultExceptionHandler(object):
 
     def get_redirect_status(self, request):
-        if request.method in ["put", "patch", "delete"]:
+        if request.method.lower() in ["put", "patch", "delete"]:
             return status.HTTP_303_SEE_OTHER
 
         return status.HTTP_302_FOUND
