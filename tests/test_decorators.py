@@ -50,6 +50,7 @@ class DecoratorTestCase(TestCase):
         assert data["component"] == "Component/Path"
         assert response.status_code == 200
         assert response['Content-Type'] == "application/json"
+        assert response['X-Inertia'] == "true"
 
     def test_api_view_class_decorated(self):
         @inertia("Component/Path")
@@ -67,6 +68,7 @@ class DecoratorTestCase(TestCase):
         assert data["component"] == "Component/Path"
         assert response.status_code == 200
         assert response['Content-Type'] == "application/json"
+        assert response['X-Inertia'] == "true"
 
     def test_component_method_decorated(self):
         @inertia("Component/Path")
@@ -85,6 +87,7 @@ class DecoratorTestCase(TestCase):
         assert data["component"] == "Component/Other"
         assert response.status_code == 200
         assert response['Content-Type'] == "application/json"
+        assert response['X-Inertia'] == "true"
 
     def test_viewset_decorated(self):
         @inertia("Action/List")
@@ -106,6 +109,29 @@ class DecoratorTestCase(TestCase):
         assert data["props"]["view"] == "list"
         assert response.status_code == 200
         assert response['Content-Type'] == "application/json"
+        assert response['X-Inertia'] == "true"
+
+    def test_viewset_decorated_diff(self):
+        @inertia("Action/List", list="Action/List2")
+        class ActionViewSet(GenericViewSet):
+            queryset = Action.objects.all()
+
+            def list(self, request, *args, **kwargs):
+                response = Response(data={"view": "list"})
+                return response
+
+        request = self.factory.get('/', HTTP_X_INERTIA=True)
+        response = ActionViewSet.as_view({'get': 'list'})(request)
+        data = json.loads(response.rendered_content)
+        assert "component" in data
+        assert "props" in data
+        assert "url" in data
+        assert "version" in data
+        assert data["component"] == "Action/List2"
+        assert data["props"]["view"] == "list"
+        assert response.status_code == 200
+        assert response['Content-Type'] == "application/json"
+        assert response["X-Inertia"] == "true"
 
     def test_decorated_api_view_handles_error(self):
         @inertia("Component/Path")
