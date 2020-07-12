@@ -15,6 +15,10 @@ REDIRECTS = [
 ]
 
 
+def is_valid_inertia_response(status_code):
+    return status_code == status.HTTP_409_CONFLICT or status_code < 300
+
+
 class Inertia(object):
     is_data = False  # is the X-Inertia header present
     version = None
@@ -82,6 +86,13 @@ class InertiaRendererMixin(object):
             renderer_context["request"].inertia.data = data
             serializer = InertiaSerializer(renderer_context["request"].inertia, context=renderer_context)
             data = serializer.data
+
+            # add response headers
+            renderer_context["response"]["X-Inertia-Version"] = VERSION
+
+            # Only add X-Inertia header on 2XX and 409 responses
+            if is_valid_inertia_response(renderer_context["response"].status_code):
+                renderer_context["response"]["X-Inertia"] = "true"
 
         return super(InertiaRendererMixin, self).render(
             data, accepted_media_type=accepted_media_type, renderer_context=renderer_context)

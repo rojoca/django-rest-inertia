@@ -27,16 +27,15 @@ def inertia(component_path, template_name=None, **component_kwargs):
         # otherwise just need to decorate the target
         cls = getattr(target, "cls", target)
 
-        # need to keep the original initialize_request because we are
+        # need to keep the original initial method because we are
         # not extending cls, we are replacing the methods, so calling
         # super will not work as expected
-        wrapped_initialize_request = getattr(cls, "initialize_request")
+        wrapped_initial = getattr(cls, "initial")
 
-        def initialize_request(self, request, *args, **kwargs):
-            request = wrapped_initialize_request(self, request, *args, **kwargs)
-
+        def initial(self, request, *args, **kwargs):
+            # Configure Inertia object and add to request
             if not hasattr(request, 'inertia'):
-                # Get the action (~htp method) to determine the component.
+                # Get the action (~http method) to determine the component.
                 # ViewSets set the "action" attribute on the instance,
                 # class based views just use the HTTP method
                 action = getattr(self, "action", request.method)
@@ -54,9 +53,11 @@ def inertia(component_path, template_name=None, **component_kwargs):
 
             # set the inertia template
             # this can still be overriden by get_template_names()
-            self.template_name = template_name or TEMPLATE
+            if not hasattr(self, "template_name") or not self.template_name:
+                self.template_name = template_name or TEMPLATE
 
-            return request
+            # call the wrapped initial method
+            wrapped_initial(self, request, *args, **kwargs)
 
         def raise_uncaught_exception(self, exc):
             if DEBUG:
@@ -65,11 +66,11 @@ def inertia(component_path, template_name=None, **component_kwargs):
                 request.accepted_media_type = "text/html"
             raise exc
 
-
         # add the updated methods to the cls
         cls.get_content_negotiator = lambda self: InertiaNegotiation()
         cls.get_exception_handler = lambda self: exception_handler
-        cls.initialize_request = initialize_request
+        cls.initial = initial
+        cls.raise_uncaught_exception = raise_uncaught_exception
         return target
     return decorator
 

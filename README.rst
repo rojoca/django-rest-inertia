@@ -29,6 +29,8 @@ Django Settings
 
 The following settings can be used:
 
+.. code:: python
+
     # the version to use for ASSET VERSIONING
     INERTIA_VERSION # default: "unversioned"
 
@@ -56,6 +58,8 @@ The following settings can be used:
     INERTIA_AUTH_REDIRECT_URL_NAME # default: None
 
 Non-inertia settings:
+
+.. code:: python
 
     # To use inertia as it is with Laravel and Rails you should be using
     # Session Authentication
