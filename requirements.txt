@@ -10,7 +10,7 @@ pytest-mock==3.0.0
 flake8==2.2.2
 
 # wheel for PyPI installs
-wheel==0.34.2
+wheel==0.38.1
 
 # MkDocs for documentation previews/deploys
 mkdocs==0.11.1
